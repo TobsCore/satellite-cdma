@@ -29,10 +29,10 @@ char *readFile(char *filename) {
 int main(int argn, char *argv[]) {
 
     if (argn <= 1) {
-        printf("Programm parameter missing: Please add a file, that should be read");
+        printf("Programm parameter missing: Please add a file, that should be read\n");
         return -1;
     }
     char *gpsSequence = readFile(argv[1]);
-    printf(gpsSequence);
+    printf("%s", gpsSequence);
 
 }
