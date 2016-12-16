@@ -207,6 +207,23 @@ void recursiveChipSequenceCalculation(int satelliteID, int above, int below, int
     }
 }
 
+/**
+ * Shifts the bit sequence by the given delta. In order to shift the bits and still generate a 1023 bit long sequence
+ * the missing bits (at the end) will be filled up with bits from the beginning. This can be done, because the signal
+ * the gps satellite sent is repeated several times.
+ * @param sequence The sequence, that will be shifted by the given value.
+ * @param delta The delta, by which the sequence will be shifted.
+ * @return A newly created sequence, in which the bits are shifted by the given delta.
+ */
+int *shiftSequenceByDelta(int *sequence, int delta) {
+    int *shiftedSequence = malloc(1023 * sizeof(int));
+    for (int i = 0; i < 1023; i++) {
+        shiftedSequence[i] = sequence[(i + delta) % 1023];
+    }
+
+    return shiftedSequence;
+}
+
 
 /**
  * Generates the chip sequence (mother sequence) for a given satellite. This is a recursive method call, which places
@@ -240,7 +257,6 @@ int main(int argn, char *argv[]) {
 
     for (int i = 0; i < 24; i++) {
         generateChipSequence(i + 1, satelliteChipSequences[i]);
-
     }
 
 
@@ -250,6 +266,17 @@ int main(int argn, char *argv[]) {
             printf("%d", satelliteChipSequences[i][j]);
         }
         printf("\n");
+
+        for (int k = 0; k < 1023; k++) {
+            printf("\t Shifted: ");
+            int *shiftedSequence = shiftSequenceByDelta(satelliteChipSequences[0], k);
+
+            for (int j = 0; j < 1023; j++) {
+                printf("%d", shiftedSequence[j]);
+            }
+            printf("\n");
+        }
+
     }
 
 }
