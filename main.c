@@ -62,18 +62,19 @@ char *readFile(char *filename) {
 /**
  * Places the char representation of numbers, that have been read from the file, into an integer array.
  * @param contents The contents of the file.
- * @param gpsSequence The integer array that is used to hold the numbers.
+ * @return Returns the gps sequence.
  */
-void convertFileContentToIntegerArray(char *contents, int *gpsSequence) {
+int* convertFileContentToIntegerArray(char *contents) {
     char *splitFileContents = strtok(contents, " ");
-
+    int* resultSequence = malloc(1023 * sizeof(int));
 
     int i = 0;
     while (splitFileContents != NULL) {
-        gpsSequence[i] = atoi(splitFileContents);
+        resultSequence[i] = atoi(splitFileContents);
         i++;
         splitFileContents = strtok(NULL, " ");
     }
+    return resultSequence;
 }
 
 /**
@@ -250,8 +251,7 @@ int main(int argn, char *argv[]) {
         return -1;
     }
     char *fileContents = readFile(argv[1]);
-    int gpsSequence[1023];
-    convertFileContentToIntegerArray(fileContents, gpsSequence);
+    int *gpsSequence = convertFileContentToIntegerArray(fileContents);
 
     int satelliteChipSequences[24][1023];
 
@@ -267,16 +267,14 @@ int main(int argn, char *argv[]) {
         }
         printf("\n");
 
-        for (int k = 0; k < 1023; k++) {
-            printf("\t Shifted: ");
-            int *shiftedSequence = shiftSequenceByDelta(satelliteChipSequences[0], k);
-
+        for (int delta = 0; delta < 1023; delta++) {
+            //printf("\t Shifted: ");
+            int *shiftedSequence = shiftSequenceByDelta(satelliteChipSequences[0], delta);
             for (int j = 0; j < 1023; j++) {
-                printf("%d", shiftedSequence[j]);
+                //printf("%d", shiftedSequence[j]);
             }
-            printf("\n");
+            //printf("\n");
         }
-
     }
 
 }
