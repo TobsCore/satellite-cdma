@@ -260,20 +260,23 @@ int main(int argn, char *argv[]) {
     }
 
 
-    for (int i = 0; i < 24; i++) {
-        printf("Satellite %2d: ", i + 1);
+    for (int satelliteID = 0; satelliteID < 24; satelliteID++) {
+        printf("Satellite %2d: ", satelliteID + 1);
         for (int j = 0; j < 1023; j++) {
-            printf("%d", satelliteChipSequences[i][j]);
+            printf("%d", satelliteChipSequences[satelliteID][j]);
         }
         printf("\n");
 
         for (int delta = 0; delta < 1023; delta++) {
-            //printf("\t Shifted: ");
-            int *shiftedSequence = shiftSequenceByDelta(satelliteChipSequences[0], delta);
-            for (int j = 0; j < 1023; j++) {
-                //printf("%d", shiftedSequence[j]);
+
+            if (delta >= 0 && delta < 10) {
+                printf("\t Shifted: ");
+                int *shiftedSequence = shiftSequenceByDelta(satelliteChipSequences[satelliteID], delta);
+                for (int j = 0; j < 1023; j++) {
+                    printf("%d", shiftedSequence[j]);
+                }
+                printf("\n");
             }
-            //printf("\n");
         }
     }
 
