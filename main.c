@@ -288,13 +288,8 @@ int balbliblu(int *sequence, int *resultSequence) {
 
 }
 
-int main(int argn, char *argv[]) {
-
-    if (argn <= 1) {
-        printf("Program parameter missing: Please add a file, that should be read\n");
-        return -1;
-    }
-    char *fileContents = readFile(argv[1]);
+void decode(char *filename) {
+    char *fileContents = readFile(filename);
     int *gpsSequence = convertFileContentToIntegerArray(fileContents);
 
     int satelliteChipSequences[24][1023];
@@ -305,12 +300,6 @@ int main(int argn, char *argv[]) {
 
 
     for (int satelliteID = 0; satelliteID < 24; satelliteID++) {
-        printf("Satellite %2d: ", satelliteID + 1);
-        for (int j = 0; j < 1023; j++) {
-            printf("%d", satelliteChipSequences[satelliteID][j]);
-        }
-        printf("\n");
-
         for (int delta = 0; delta < 1023; delta++) {
 
 
@@ -319,14 +308,26 @@ int main(int argn, char *argv[]) {
             if (resultbit != -1) {
                 printf("Satellite %2d has sent bit %d (delta %4d)\n", satelliteID, resultbit, delta);
             }
-/*
-            printf("\t Shifted: ");
-            for (int j = 0; j < 1023; j++) {
-                printf("%d", shiftedSequence[j]);
-            }
-            printf("\n");
-            */
         }
     }
+}
+
+
+int main(int argn, char *argv[]) {
+
+    if (argn == 1) {
+        for (int i = 1; i <= 20; i++) {
+
+            char filename[23];
+            sprintf(filename, "../gps_sequence_%d.txt", i);
+
+            printf("Decoding file %s\n", filename);
+            decode(filename);
+            printf("\n");
+        }
+    } else if (argn == 2) {
+        decode(argv[1]);
+    }
+
 
 }
