@@ -64,9 +64,9 @@ char *readFile(char *filename) {
  * @param contents The contents of the file.
  * @return Returns the gps sequence.
  */
-int* convertFileContentToIntegerArray(char *contents) {
+int *convertFileContentToIntegerArray(char *contents) {
     char *splitFileContents = strtok(contents, " ");
-    int* resultSequence = malloc(1023 * sizeof(int));
+    int *resultSequence = malloc(1023 * sizeof(int));
 
     int i = 0;
     while (splitFileContents != NULL) {
