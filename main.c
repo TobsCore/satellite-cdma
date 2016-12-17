@@ -317,7 +317,7 @@ int main(int argn, char *argv[]) {
             int *shiftedSequence = shiftSequenceByDelta(satelliteChipSequences[satelliteID], delta);
             int resultbit = balbliblu(shiftedSequence, gpsSequence);
             if (resultbit != -1) {
-                printf("FOUND! Delta %d\n", delta);
+                printf("Satellite %2d has sent bit %d (delta %4d)\n", satelliteID, resultbit, delta);
             }
 /*
             printf("\t Shifted: ");
