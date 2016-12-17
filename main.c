@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 int satelliteMap[24][2] = {
         {2, 6},
@@ -27,6 +28,9 @@ int satelliteMap[24][2] = {
         {6, 9},
         {1, 3},
         {4, 6}};
+
+const double upperPeak = 63; // pow(2.0, (10 + 2) / 2) - 1;
+const double lowerPeak = -65; // (-1 * pow(2.0, (10 + 2) / 2)) - 1;
 
 /**
  * Is used to read the file's contents from the given file.
@@ -243,44 +247,29 @@ void generateChipSequence(int satelliteID, int *resultArray) {
     recursiveChipSequenceCalculation(satelliteID, defaultConfigAbove, defaultConfigBelow, cycleStart, resultArray);
 }
 
-int sequenceMatchesResult2(int *sequence, int *resultSequence) {
+/**
+ * Checks, if a bit is encoded in the given sequence. If no bit is encoded, -1 is returned, otherwise the bit that
+ * has been encoded will be returned.
+ * @param sequence The satellite's chip sequence.
+ * @param resultSequence The sum signal sequence.
+ * @return {@code -1} if not bit has been encoded by this sequence. {@code 1} if the bit 1 was encoded, {@code 0} if
+ * the bit 0 has been encoded.
+ */
+int checkForBit(int *sequence, int *resultSequence) {
+    int skalarprodukt = 0;
+
     for (int i = 0; i < 1023; i++) {
-
+        int bit = sequence[i] == 1 ? 1 : -1;
         int resultValue = resultSequence[i];
-        int bit = sequence[i];
 
-        if (resultValue == 4 && bit != 0) {
-            return 0;
-        } else if (resultValue == -4 && bit != 1) {
-            return 0;
-        }
+        skalarprodukt += bit * resultValue;
     }
-    return 1;
-}
 
-int sequenceMatchesResult(int *sequence, int *resultSequence) {
-    for (int i = 0; i < 1023; i++) {
+    skalarprodukt = skalarprodukt / 10;
 
-        int resultValue = resultSequence[i];
-        int bit = sequence[i];
-
-        if (resultValue == 4 && bit != 1) {
-            return 0;
-        } else if (resultValue == -4 && bit != 0) {
-            return 0;
-        }
-    }
-    return 1;
-}
-
-int balbliblu(int *sequence, int *resultSequence) {
-    int result1 = sequenceMatchesResult(sequence, resultSequence);
-    if (result1) {
+    if (skalarprodukt >= upperPeak) {
         return 1;
-    }
-
-    int result2 = sequenceMatchesResult2(sequence, resultSequence);
-    if (result2) {
+    } else if (skalarprodukt <= lowerPeak) {
         return 0;
     }
 
@@ -288,6 +277,10 @@ int balbliblu(int *sequence, int *resultSequence) {
 
 }
 
+/**
+ * Decodes the contents of the given file.
+ * @param filename  The file's name.
+ */
 void decode(char *filename) {
     char *fileContents = readFile(filename);
     int *gpsSequence = convertFileContentToIntegerArray(fileContents);
@@ -298,13 +291,12 @@ void decode(char *filename) {
         generateChipSequence(i + 1, satelliteChipSequences[i]);
     }
 
-
     for (int satelliteID = 0; satelliteID < 24; satelliteID++) {
         for (int delta = 0; delta < 1023; delta++) {
 
 
             int *shiftedSequence = shiftSequenceByDelta(satelliteChipSequences[satelliteID], delta);
-            int resultbit = balbliblu(shiftedSequence, gpsSequence);
+            int resultbit = checkForBit(shiftedSequence, gpsSequence);
             if (resultbit != -1) {
                 printf("Satellite %2d has sent bit %d (delta %4d)\n", satelliteID, resultbit, delta);
             }
@@ -313,14 +305,18 @@ void decode(char *filename) {
 }
 
 
+/**
+ * Starts the application.
+ * @param argn  The number of arguments.
+ * @param argv The arguments that were passed to the program.
+ * @return The program's return code.
+ */
 int main(int argn, char *argv[]) {
 
     if (argn == 1) {
         for (int i = 1; i <= 20; i++) {
-
             char filename[23];
             sprintf(filename, "../gps_sequence_%d.txt", i);
-
             printf("Decoding file %s\n", filename);
             decode(filename);
             printf("\n");
