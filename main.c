@@ -1,25 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
-int satelliteMap[24][2] = {
+static const int amountOfSatellites = 24;
+static const int registerLength = 10;
+static const int amountOfChipSequences = 1023;
+
+int satelliteMap[amountOfSatellites][2] = {
         {2, 6},
         {3, 7},
         {4, 8},
         {5, 9},
         {1, 9},
-        {2, 10},
+        {2, registerLength},
         {1, 8},
         {2, 9},
-        {3, 10},
+        {3, registerLength},
         {2, 3},
         {3, 4},
         {5, 6},
         {6, 7},
         {7, 8},
         {8, 9},
-        {9, 10},
+        {9, registerLength},
         {1, 4},
         {2, 5},
         {3, 6},
@@ -70,7 +73,7 @@ char *readFile(char *filename) {
  */
 int *convertFileContentToIntegerArray(char *contents) {
     char *splitFileContents = strtok(contents, " ");
-    int *resultSequence = malloc(1023 * sizeof(int));
+    int *resultSequence = malloc(amountOfChipSequences * sizeof(int));
 
     int i = 0;
     while (splitFileContents != NULL) {
@@ -88,7 +91,7 @@ int *convertFileContentToIntegerArray(char *contents) {
  * @return The bit value at the given position.
  */
 int getBitValueAtPosition(int bitSequence, int position) {
-    int shifter = 10 - position;
+    int shifter = registerLength - position;
     int filter = 1 << shifter;
 
     return (bitSequence & filter) >> shifter;
@@ -133,7 +136,7 @@ int calcNumbersFromBelow(int satelliteID, int bitSequence) {
  */
 int nextChipSequenceBit(int satelliteId, int above, int below) {
     //Only take the last bit from the above sequence
-    int fromAbove = getBitValueAtPosition(above, 10);
+    int fromAbove = getBitValueAtPosition(above, registerLength);
     int fromBelow = calcNumbersFromBelow(satelliteId, below);
 
     return fromAbove ^ fromBelow;
@@ -169,7 +172,7 @@ int moveBitForward(int firstBit) {
  * @return The generated bit.
  */
 int generateAboveSequence(int bitSequence) {
-    int firstBit = getBitValueAtPosition(bitSequence, 3) ^getBitValueAtPosition(bitSequence, 10);
+    int firstBit = getBitValueAtPosition(bitSequence, 3) ^getBitValueAtPosition(bitSequence, registerLength);
     int firstBitMovedForward = moveBitForward(firstBit);
 
     return generateSequence(bitSequence, firstBitMovedForward);
@@ -183,11 +186,10 @@ int generateAboveSequence(int bitSequence) {
 int generateBelowSequence(int bitSequence) {
     int firstBit = getBitValueAtPosition(bitSequence, 2) ^getBitValueAtPosition(bitSequence, 3) ^
                    getBitValueAtPosition(bitSequence, 6) ^getBitValueAtPosition(bitSequence, 8) ^
-                   getBitValueAtPosition(bitSequence, 9) ^getBitValueAtPosition(bitSequence, 10);
+                   getBitValueAtPosition(bitSequence, 9) ^getBitValueAtPosition(bitSequence, registerLength);
     int firstBitMovedForward = moveBitForward(firstBit);
     return generateSequence(bitSequence, firstBitMovedForward);
 }
-
 
 /**
  * This recursive method call is used to calculate each bit of the chip sequence and stores the calculated bit in the
@@ -200,7 +202,7 @@ int generateBelowSequence(int bitSequence) {
  * @return
  */
 void recursiveChipSequenceCalculation(int satelliteID, int above, int below, int cycleCount, int *resultArray) {
-    if (cycleCount >= 1023) {
+    if (cycleCount >= amountOfChipSequences) {
         //Abort!
     } else {
         int returnValue = nextChipSequenceBit(satelliteID, above, below);
@@ -221,14 +223,13 @@ void recursiveChipSequenceCalculation(int satelliteID, int above, int below, int
  * @return A newly created sequence, in which the bits are shifted by the given delta.
  */
 int *shiftSequenceByDelta(int *sequence, int delta) {
-    int *shiftedSequence = malloc(1023 * sizeof(int));
-    for (int i = 0; i < 1023; i++) {
-        shiftedSequence[i] = sequence[(i + delta) % 1023];
+    int *shiftedSequence = malloc(amountOfChipSequences * sizeof(int));
+    for (int i = 0; i < amountOfChipSequences; i++) {
+        shiftedSequence[i] = sequence[(i + delta) % amountOfChipSequences];
     }
 
     return shiftedSequence;
 }
-
 
 /**
  * Generates the chip sequence (mother sequence) for a given satellite. This is a recursive method call, which places
@@ -256,20 +257,20 @@ void generateChipSequence(int satelliteID, int *resultArray) {
  * the bit 0 has been encoded.
  */
 int checkForBit(int *sequence, int *resultSequence) {
-    int skalarprodukt = 0;
+    int scalarProduct = 0;
 
-    for (int i = 0; i < 1023; i++) {
+    for (int i = 0; i < amountOfChipSequences; i++) {
         int bit = sequence[i] == 1 ? 1 : -1;
         int resultValue = resultSequence[i];
 
-        skalarprodukt += bit * resultValue;
+        scalarProduct += bit * resultValue;
     }
 
-    skalarprodukt = skalarprodukt / 10;
+    scalarProduct = scalarProduct / registerLength;
 
-    if (skalarprodukt >= upperPeak) {
+    if (scalarProduct >= upperPeak) {
         return 1;
-    } else if (skalarprodukt <= lowerPeak) {
+    } else if (scalarProduct <= lowerPeak) {
         return 0;
     }
 
@@ -285,25 +286,24 @@ void decode(char *filename) {
     char *fileContents = readFile(filename);
     int *gpsSequence = convertFileContentToIntegerArray(fileContents);
 
-    int satelliteChipSequences[24][1023];
+    int satelliteChipSequences[amountOfSatellites][amountOfChipSequences];
 
-    for (int i = 0; i < 24; i++) {
+    for (int i = 0; i < amountOfSatellites; i++) {
         generateChipSequence(i + 1, satelliteChipSequences[i]);
     }
 
-    for (int satelliteID = 0; satelliteID < 24; satelliteID++) {
-        for (int delta = 0; delta < 1023; delta++) {
+    for (int satelliteID = 0; satelliteID < amountOfSatellites; satelliteID++) {
+        for (int delta = 0; delta < amountOfChipSequences; delta++) {
 
 
             int *shiftedSequence = shiftSequenceByDelta(satelliteChipSequences[satelliteID], delta);
-            int resultbit = checkForBit(shiftedSequence, gpsSequence);
-            if (resultbit != -1) {
-                printf("Satellite %2d has sent bit %d (delta %4d)\n", satelliteID, resultbit, delta);
+            int resultBit = checkForBit(shiftedSequence, gpsSequence);
+            if (resultBit != -1) {
+                printf("Satellite %2d has sent bit %d (delta %4d)\n", satelliteID, resultBit, delta);
             }
         }
     }
 }
-
 
 /**
  * Starts the application.
@@ -314,7 +314,7 @@ void decode(char *filename) {
 int main(int argn, char *argv[]) {
 
     if (argn == 1) {
-        for (int i = 1; i <= 20; i++) {
+        for (int i = 1; i <= 30; i++) {
             char filename[23];
             sprintf(filename, "../gps_sequence_%d.txt", i);
             printf("Decoding file %s\n", filename);
@@ -324,6 +324,4 @@ int main(int argn, char *argv[]) {
     } else if (argn == 2) {
         decode(argv[1]);
     }
-
-
 }
