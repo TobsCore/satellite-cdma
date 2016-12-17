@@ -241,6 +241,50 @@ void generateChipSequence(int satelliteID, int *resultArray) {
     int cycleStart = 0;
 
     recursiveChipSequenceCalculation(satelliteID, defaultConfigAbove, defaultConfigBelow, cycleStart, resultArray);
+}
+
+int sequenceMatchesResult2(int *sequence, int *resultSequence) {
+    for (int i = 0; i < 1023; i++) {
+
+        int resultValue = resultSequence[i];
+        int bit = sequence[i];
+
+        if (resultValue == 4 && bit != 0) {
+            return 0;
+        } else if (resultValue == -4 && bit != 1) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int sequenceMatchesResult(int *sequence, int *resultSequence) {
+    for (int i = 0; i < 1023; i++) {
+
+        int resultValue = resultSequence[i];
+        int bit = sequence[i];
+
+        if (resultValue == 4 && bit != 1) {
+            return 0;
+        } else if (resultValue == -4 && bit != 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int balbliblu(int *sequence, int *resultSequence) {
+    int result1 = sequenceMatchesResult(sequence, resultSequence);
+    if (result1) {
+        return 1;
+    }
+
+    int result2 = sequenceMatchesResult2(sequence, resultSequence);
+    if (result2) {
+        return 0;
+    }
+
+    return -1;
 
 }
 
@@ -269,14 +313,19 @@ int main(int argn, char *argv[]) {
 
         for (int delta = 0; delta < 1023; delta++) {
 
-            if (delta >= 0 && delta < 10) {
-                printf("\t Shifted: ");
-                int *shiftedSequence = shiftSequenceByDelta(satelliteChipSequences[satelliteID], delta);
-                for (int j = 0; j < 1023; j++) {
-                    printf("%d", shiftedSequence[j]);
-                }
-                printf("\n");
+
+            int *shiftedSequence = shiftSequenceByDelta(satelliteChipSequences[satelliteID], delta);
+            int resultbit = balbliblu(shiftedSequence, gpsSequence);
+            if (resultbit != -1) {
+                printf("FOUND! Delta %d\n", delta);
             }
+/*
+            printf("\t Shifted: ");
+            for (int j = 0; j < 1023; j++) {
+                printf("%d", shiftedSequence[j]);
+            }
+            printf("\n");
+            */
         }
     }
 
